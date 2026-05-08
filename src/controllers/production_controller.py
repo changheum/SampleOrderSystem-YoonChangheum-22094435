@@ -12,11 +12,16 @@ class ProductionController:
         self._view.show_waiting_jobs(self._service.get_waiting_jobs())
 
     def complete_job(self) -> None:
-        job_id = self._view.show_complete_prompt()
-        if not job_id:
+        all_jobs = []
+        current = self._service.get_current_job()
+        if current:
+            all_jobs.append(current)
+        all_jobs.extend(self._service.get_waiting_jobs())
+        job = self._view.show_jobs_for_selection(all_jobs)
+        if job is None:
             return
         try:
-            order = self._service.complete_job(job_id)
+            order = self._service.complete_job(job.job_id)
             self._view.show_complete_success(order.order_id)
         except ValueError as e:
             self._view.show_error(str(e))
