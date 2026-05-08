@@ -103,7 +103,7 @@ class TestProductionControllerCompleteJobWithList:
 
 class TestProductionControllerRun:
     def test_run_show_status_then_exit(self, controller, mock_service, mock_view):
-        mock_view.show_menu.side_effect = ["1", "3"]
+        mock_view.show_menu.side_effect = ["1", "2"]
         mock_service.restore.return_value = []
         mock_service.get_current_job_progress.return_value = None
         mock_service.get_waiting_jobs.return_value = []
@@ -115,18 +115,16 @@ class TestProductionControllerRun:
         mock_service.restore.side_effect = lambda: call_order.append("restore") or []
         mock_service.get_current_job_progress.side_effect = lambda: call_order.append("progress") or None
         mock_service.get_waiting_jobs.return_value = []
-        mock_view.show_menu.side_effect = ["1", "3"]
+        mock_view.show_menu.side_effect = ["1", "2"]
         controller.run()
         assert call_order == ["restore", "progress"]
 
-    def test_run_complete_then_exit(self, controller, mock_service, mock_view):
-        mock_view.show_menu.side_effect = ["2", "3"]
-        mock_service.get_current_job.return_value = None
-        mock_service.get_waiting_jobs.return_value = []
-        mock_view.show_jobs_for_selection.return_value = None
+    def test_run_choice_2_exits(self, controller, mock_service, mock_view):
+        mock_view.show_menu.return_value = "2"
         controller.run()
+        mock_view.show_menu.assert_called_once()
 
     def test_run_invalid_choice_shows_error(self, controller, mock_service, mock_view):
-        mock_view.show_menu.side_effect = ["9", "3"]
+        mock_view.show_menu.side_effect = ["9", "2"]
         controller.run()
         mock_view.show_error.assert_called_once()
