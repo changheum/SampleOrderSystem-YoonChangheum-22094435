@@ -3,16 +3,25 @@ from src.models import Sample, Order, Inventory, OrderStatus
 
 
 class TestOrderStatus:
-    def test_status_constants_exist(self):
+    def test_status_values_match_strings(self):
         assert OrderStatus.RESERVED == "RESERVED"
         assert OrderStatus.REJECTED == "REJECTED"
         assert OrderStatus.PRODUCING == "PRODUCING"
         assert OrderStatus.CONFIRMED == "CONFIRMED"
         assert OrderStatus.RELEASE == "RELEASE"
 
-    def test_all_statuses(self):
-        all_statuses = OrderStatus.all()
-        assert set(all_statuses) == {"RESERVED", "REJECTED", "PRODUCING", "CONFIRMED", "RELEASE"}
+    def test_all_statuses_are_enumerable(self):
+        assert set(OrderStatus) == {
+            OrderStatus.RESERVED,
+            OrderStatus.REJECTED,
+            OrderStatus.PRODUCING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.RELEASE,
+        }
+
+    def test_status_is_string_compatible(self):
+        assert OrderStatus.RESERVED == "RESERVED"
+        assert isinstance(OrderStatus.RESERVED, str)
 
 
 class TestSample:
@@ -47,9 +56,17 @@ class TestSample:
         with pytest.raises(ValueError, match="sample_id"):
             Sample(sample_id="", name="GaN Wafer", avg_production_time=120, yield_rate=0.9)
 
+    def test_should_raise_when_sample_id_is_blank(self):
+        with pytest.raises(ValueError, match="sample_id"):
+            Sample(sample_id="   ", name="GaN Wafer", avg_production_time=120, yield_rate=0.9)
+
     def test_should_raise_when_name_is_empty(self):
         with pytest.raises(ValueError, match="name"):
             Sample(sample_id="S001", name="", avg_production_time=120, yield_rate=0.9)
+
+    def test_should_raise_when_name_is_blank(self):
+        with pytest.raises(ValueError, match="name"):
+            Sample(sample_id="S001", name="   ", avg_production_time=120, yield_rate=0.9)
 
 
 class TestOrder:
@@ -62,7 +79,7 @@ class TestOrder:
             status=OrderStatus.RESERVED,
         )
         assert order.order_id == "O001"
-        assert order.status == "RESERVED"
+        assert order.status == OrderStatus.RESERVED
 
     def test_should_raise_when_quantity_is_zero(self):
         with pytest.raises(ValueError, match="quantity"):
@@ -72,7 +89,7 @@ class TestOrder:
         with pytest.raises(ValueError, match="quantity"):
             Order(order_id="O001", sample_id="S001", customer_name="KAIST Lab", quantity=-5, status=OrderStatus.RESERVED)
 
-    def test_should_raise_when_status_is_invalid(self):
+    def test_should_raise_when_status_is_invalid_string(self):
         with pytest.raises(ValueError, match="status"):
             Order(order_id="O001", sample_id="S001", customer_name="KAIST Lab", quantity=10, status="UNKNOWN")
 
@@ -80,12 +97,24 @@ class TestOrder:
         with pytest.raises(ValueError, match="order_id"):
             Order(order_id="", sample_id="S001", customer_name="KAIST Lab", quantity=10, status=OrderStatus.RESERVED)
 
+    def test_should_raise_when_order_id_is_blank(self):
+        with pytest.raises(ValueError, match="order_id"):
+            Order(order_id="   ", sample_id="S001", customer_name="KAIST Lab", quantity=10, status=OrderStatus.RESERVED)
+
+    def test_should_raise_when_sample_id_is_empty(self):
+        with pytest.raises(ValueError, match="sample_id"):
+            Order(order_id="O001", sample_id="", customer_name="KAIST Lab", quantity=10, status=OrderStatus.RESERVED)
+
     def test_should_raise_when_customer_name_is_empty(self):
         with pytest.raises(ValueError, match="customer_name"):
             Order(order_id="O001", sample_id="S001", customer_name="", quantity=10, status=OrderStatus.RESERVED)
 
+    def test_should_raise_when_customer_name_is_blank(self):
+        with pytest.raises(ValueError, match="customer_name"):
+            Order(order_id="O001", sample_id="S001", customer_name="   ", quantity=10, status=OrderStatus.RESERVED)
+
     def test_all_valid_statuses_are_accepted(self):
-        for status in OrderStatus.all():
+        for status in OrderStatus:
             order = Order(order_id="O001", sample_id="S001", customer_name="Lab", quantity=1, status=status)
             assert order.status == status
 
@@ -107,3 +136,7 @@ class TestInventory:
     def test_should_raise_when_sample_id_is_empty(self):
         with pytest.raises(ValueError, match="sample_id"):
             Inventory(sample_id="", stock_quantity=10)
+
+    def test_should_raise_when_sample_id_is_blank(self):
+        with pytest.raises(ValueError, match="sample_id"):
+            Inventory(sample_id="   ", stock_quantity=10)
