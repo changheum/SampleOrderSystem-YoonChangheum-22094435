@@ -181,13 +181,13 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 **목표:** 프로젝트 구조 생성, 도메인 데이터 클래스(dataclass) 정의, 기본 유효성 검사
 
 **작업 목록:**
-- [ ] `pytest`, `pytest-cov` 의존성 설정 (`requirements.txt`)
-- [ ] `src/models.py` — `Sample`, `Order`, `Inventory` dataclass 정의
+- [x] `pytest`, `pytest-cov` 의존성 설정 (`requirements.txt`)
+- [x] `src/models.py` — `Sample`, `Order`, `Inventory` dataclass 정의
   - Sample: sample_id(str), name(str), avg_production_time(int, >0), yield_rate(float, 0<y≤1)
   - Order: order_id(str), sample_id(str), customer_name(str), quantity(int, >0), status(str)
   - Inventory: sample_id(str), stock_quantity(int, ≥0)
-- [ ] `tests/test_models.py` — 각 모델 생성, 유효성 실패 케이스 테스트
-- [ ] Status 유효값 상수 정의
+- [x] `tests/test_models.py` — 각 모델 생성, 유효성 실패 케이스 테스트
+- [x] Status 유효값 상수 정의
 
 **완료 기준:** `pytest --cov=src --cov-report=term-missing` 커버리지 100%
 **완료 후:** 사용자 승인 → git push
@@ -199,11 +199,11 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 **목표:** 각 엔티티에 대해 무작위 유효 데이터를 생성하는 Generator 클래스 구현
 
 **작업 목록:**
-- [ ] `src/generators.py`
+- [x] `src/generators.py`
   - `SampleGenerator.generate(count: int) -> list[Sample]`
   - `OrderGenerator.generate(count: int, sample_ids: list[str]) -> list[Order]`
   - `InventoryGenerator.generate(sample_ids: list[str]) -> list[Inventory]`
-- [ ] `tests/test_generators.py`
+- [x] `tests/test_generators.py`
   - 생성된 데이터가 모델 유효성 조건을 만족하는지
   - count=0, count=1, count=N 경계값
   - sample_ids가 빈 리스트일 때 처리
@@ -218,11 +218,11 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 **목표:** 생성된 데이터를 JSON 파일에 누적 추가(append)하는 FileWriter 구현
 
 **작업 목록:**
-- [ ] `src/file_writer.py`
+- [x] `src/file_writer.py`
   - `JsonFileWriter.append(file_path: str, data: dict) -> None`
   - 파일 없으면 새로 생성, 있으면 기존 배열에 추가
   - 데이터 타입별 키 구분: `"samples"`, `"orders"`, `"inventories"`
-- [ ] `tests/test_file_writer.py`
+- [x] `tests/test_file_writer.py`
   - 신규 파일 생성 케이스
   - 기존 파일에 누적 추가 케이스
   - 빈 리스트 추가 케이스
@@ -238,19 +238,19 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 **목표:** 전체 흐름을 조율하는 `DummyDataGenerator` 클래스 + CLI 인터페이스
 
 **작업 목록:**
-- [ ] `src/dummy_data_generator.py`
+- [x] `src/dummy_data_generator.py`
   - `DummyDataGenerator.generate_and_save(output_path: str, sample_count: int, order_count: int) -> None`
   - Generator → FileWriter 연결
-- [ ] `main.py` — CLI 진입점 (argparse)
-- [ ] `tests/test_dummy_data_generator.py` — 통합 테스트 (파일 실제 생성 확인)
-- [ ] 전체 커버리지 최종 점검
+- [x] `main.py` — CLI 진입점 (argparse)
+- [x] `tests/test_dummy_data_generator.py` — 통합 테스트 (파일 실제 생성 확인)
+- [x] 전체 커버리지 최종 점검
 
 **완료 기준:** `pytest --cov=src --cov-report=term-missing` 커버리지 ~100%, `python main.py` 실행 확인
 **완료 후:** 사용자 승인 → git push (최종)
 
 ---
 
-## 진행 현황
+## 진행 현황 (DummyDataGenerator PoC)
 
 | Phase | 상태 |
 |-------|------|
@@ -258,3 +258,29 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 | Phase 2: Generator | ✅ 완료 |
 | Phase 3: File Writer | ✅ 완료 |
 | Phase 4: 통합 | ✅ 완료 |
+
+---
+
+# SampleOrderSystem 개발 진행 현황
+
+## Phase 계획 및 완료 현황
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| Phase 1 | 프로젝트 기반 + 도메인 모델 (Sample, Order, Inventory, OrderStatus) | ✅ 완료 |
+| Phase 2 | 데이터 영속성 (JSON Repository, BaseRepository[T]) | ✅ 완료 |
+| Phase 3 | 시료 관리 메뉴 (MVC, BaseSampleView ABC) | ✅ 완료 |
+| Phase 4 | 주문 접수/승인/거절 (OrderService, ProductionQueueProtocol) | ✅ 완료 |
+| Phase 5 | 생산 라인 (ProductionCalculator, FIFO Queue, AbstractProductionQueue) | ✅ 완료 |
+| Phase 6 | 모니터링 (InventoryStatusLabel Enum, ReadableRepository Protocol) | ✅ 완료 |
+| Phase 7 | 출고 처리 (CONFIRMED → RELEASE) | ✅ 완료 |
+| Phase 8 | 메인 메뉴 통합 + main.py | ✅ 완료 |
+| Phase 9 | 생산 큐 영속성 및 재시작 복원 | 🔲 예정 |
+
+## 누적 테스트 현황
+
+| 항목 | 수치 |
+|------|------|
+| 전체 테스트 수 | 245개 |
+| 커버리지 | 100% |
+| 개발 방법론 | TDD (Red → Green → Refactor) |
