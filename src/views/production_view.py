@@ -1,7 +1,8 @@
 from src.production_queue import ProductionJob
+from src.views.base_view import AbstractProductionView
 
 
-class ProductionView:
+class ProductionView(AbstractProductionView):
     def show_current_job(self, job: ProductionJob | None) -> None:
         print("\n=== 현재 생산 중 ===")
         if job is None:

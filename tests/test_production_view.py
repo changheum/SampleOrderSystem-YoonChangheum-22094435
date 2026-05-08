@@ -78,3 +78,8 @@ class TestProductionViewJobSelection:
         with patch("builtins.input", return_value="99"):
             result = view.show_jobs_for_selection([sample_job])
         assert result is None
+
+    def test_show_jobs_for_selection_returns_none_on_non_numeric_input(self, view, sample_job):
+        with patch("builtins.input", return_value="abc"):
+            result = view.show_jobs_for_selection([sample_job])
+        assert result is None

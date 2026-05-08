@@ -1,9 +1,10 @@
 from src.production_service import ProductionService
+from src.views.base_view import AbstractProductionView
 from src.views.production_view import ProductionView
 
 
 class ProductionController:
-    def __init__(self, service: ProductionService, view: ProductionView = None):
+    def __init__(self, service: ProductionService, view: AbstractProductionView = None):
         self._service = service
         self._view = view or ProductionView()
 

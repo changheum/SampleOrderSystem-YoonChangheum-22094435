@@ -1,4 +1,25 @@
 from abc import ABC, abstractmethod
+from src.production_queue import ProductionJob
+
+
+class AbstractProductionView(ABC):
+    @abstractmethod
+    def show_current_job(self, job: ProductionJob | None) -> None: ...
+
+    @abstractmethod
+    def show_waiting_jobs(self, jobs: list[ProductionJob]) -> None: ...
+
+    @abstractmethod
+    def show_jobs_for_selection(self, jobs: list[ProductionJob]) -> ProductionJob | None: ...
+
+    @abstractmethod
+    def show_complete_success(self, order_id: str) -> None: ...
+
+    @abstractmethod
+    def show_error(self, message: str) -> None: ...
+
+    @abstractmethod
+    def show_menu(self) -> str: ...
 
 
 class BaseSampleView(ABC):
