@@ -1,4 +1,12 @@
-class SampleView:
+from src.views.base_view import BaseSampleView
+
+_COL_ID    = 10
+_COL_NAME  = 20
+_COL_TIME  = 14
+_COL_YIELD = 8
+
+
+class SampleView(BaseSampleView):
     def show_register_prompt(self) -> dict:
         print("\n=== 시료 등록 ===")
         return {
@@ -19,11 +27,11 @@ class SampleView:
         if not entries:
             print("등록된 시료가 없습니다.")
             return
-        print(f"{'ID':<10} {'이름':<20} {'생산시간(분)':<14} {'수율':<8} {'재고'}")
+        print(f"{'ID':<{_COL_ID}} {'이름':<{_COL_NAME}} {'생산시간(분)':<{_COL_TIME}} {'수율':<{_COL_YIELD}} {'재고'}")
         print("-" * 60)
         for entry in entries:
             s = entry["sample"]
-            print(f"{s.sample_id:<10} {s.name:<20} {s.avg_production_time:<14} {s.yield_rate:<8} {entry['stock_quantity']}")
+            print(f"{s.sample_id:<{_COL_ID}} {s.name:<{_COL_NAME}} {s.avg_production_time:<{_COL_TIME}} {s.yield_rate:<{_COL_YIELD}} {entry['stock_quantity']}")
 
     def show_search_prompt(self) -> str:
         return input("\n검색할 이름을 입력하세요: ").strip()

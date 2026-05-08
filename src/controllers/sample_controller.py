@@ -1,9 +1,10 @@
 from src.sample_service import SampleService
+from src.views.base_view import BaseSampleView
 from src.views.sample_view import SampleView
 
 
 class SampleController:
-    def __init__(self, service: SampleService, view: SampleView = None):
+    def __init__(self, service: SampleService, view: BaseSampleView = None):
         self._service = service
         self._view = view or SampleView()
 
@@ -40,3 +41,5 @@ class SampleController:
                 self.search()
             elif choice == "4":
                 break
+            else:
+                self._view.show_error("올바른 메뉴 번호를 선택하세요. (1~4)")

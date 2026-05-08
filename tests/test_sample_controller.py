@@ -117,3 +117,10 @@ class TestSampleControllerRun:
         inputs = iter(["3", "Silicon", "4"])
         with patch("builtins.input", side_effect=inputs):
             controller.run()
+
+    def test_run_shows_error_on_invalid_menu_choice(self, controller, mock_service, capsys):
+        mock_view = MagicMock()
+        mock_view.show_menu.side_effect = ["9", "4"]
+        ctrl = SampleController(mock_service, mock_view)
+        ctrl.run()
+        mock_view.show_error.assert_called_once()
