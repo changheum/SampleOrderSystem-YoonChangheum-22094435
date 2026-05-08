@@ -17,7 +17,8 @@ def sample_job():
 
 class TestProductionView:
     def test_show_current_job_prints_job_info(self, view, sample_job, capsys):
-        view.show_current_job(sample_job)
+        progress = ProductionProgress(job=sample_job, produced_quantity=0, estimated_completion="2026-05-08 14:30")
+        view.show_current_job(progress)
         out = capsys.readouterr().out
         assert "O001" in out
         assert "13" in out

@@ -1,6 +1,16 @@
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from math import floor
 from src.models import Order, Inventory, OrderStatus, Sample
 from src.production_queue import AbstractProductionQueue, ProductionJob
 from src.repository import OrderRepository, InventoryRepository
+
+
+@dataclass
+class ProductionProgress:
+    job: ProductionJob
+    produced_quantity: int
+    estimated_completion: str
 
 
 class ProductionService:
@@ -20,6 +30,27 @@ class ProductionService:
     def get_current_job(self) -> ProductionJob | None:
         return self._queue.get_current_job()
 
+    def get_current_job_progress(self) -> ProductionProgress | None:
+        job = self._queue.get_current_job()
+        if job is None:
+            return None
+        return ProductionProgress(
+            job=job,
+            produced_quantity=self._calc_produced(job),
+            estimated_completion=self._calc_completion(job),
+        )
+
+    def _calc_produced(self, job: ProductionJob) -> int:
+        if not job.started_at:
+            return 0
+        elapsed = (datetime.now() - datetime.fromisoformat(job.started_at)).total_seconds() / 60
+        return min(floor(job.target_quantity * elapsed / job.total_duration), job.target_quantity)
+
+    def _calc_completion(self, job: ProductionJob) -> str:
+        if not job.started_at:
+            return "미정"
+        return (datetime.fromisoformat(job.started_at) + timedelta(minutes=job.total_duration)).strftime("%Y-%m-%d %H:%M")
+
     def get_waiting_jobs(self) -> list[ProductionJob]:
         return self._queue.get_waiting_jobs()
 
@@ -38,6 +69,20 @@ class ProductionService:
         )
         self._order_repo.save(confirmed)
         return confirmed
+
+    def restore(self) -> list[Order]:
+        completed = []
+        while True:
+            job = self._queue.get_current_job()
+            if job is None or not job.started_at:
+                break
+            elapsed_minutes = (datetime.now() - datetime.fromisoformat(job.started_at)).total_seconds() / 60
+            if elapsed_minutes >= job.total_duration:
+                order = self.complete_job(job.job_id)
+                completed.append(order)
+            else:
+                break
+        return completed
 
     def _update_inventory(self, job: ProductionJob, order_quantity: int) -> None:
         existing = self._inventory_repo.find_by_id(job.sample_id)

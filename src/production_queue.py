@@ -2,6 +2,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from collections import deque
+from datetime import datetime
 from src.models import Order, Sample
 from src.production_calculator import ProductionCalculator
 
@@ -14,6 +15,7 @@ class ProductionJob:
     target_quantity: int
     total_duration: int
     produced_quantity: int = field(default=0)
+    started_at: str = field(default="")
 
 
 class AbstractProductionQueue(ABC):
@@ -48,6 +50,7 @@ class ProductionQueue(AbstractProductionQueue):
             sample_id=order.sample_id,
             target_quantity=target_qty,
             total_duration=duration,
+            started_at=datetime.now().isoformat(),
         )
         self._queue.append(job)
         return job

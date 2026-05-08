@@ -1,17 +1,21 @@
 from src.production_queue import ProductionJob
+from src.production_service import ProductionProgress
 from src.views.base_view import AbstractProductionView
 
 
 class ProductionView(AbstractProductionView):
-    def show_current_job(self, job: ProductionJob | None) -> None:
+    def show_current_job(self, progress: ProductionProgress | None) -> None:
         print("\n=== 현재 생산 중 ===")
-        if job is None:
+        if progress is None:
             print("현재 생산 중인 작업이 없습니다.")
             return
-        print(f"  주문 ID      : {job.order_id}")
-        print(f"  시료 ID      : {job.sample_id}")
-        print(f"  목표 생산량  : {job.target_quantity}")
-        print(f"  총 생산 시간 : {job.total_duration}분")
+        job = progress.job
+        print(f"  주문 ID        : {job.order_id}")
+        print(f"  시료 ID        : {job.sample_id}")
+        print(f"  목표 생산량    : {job.target_quantity}")
+        print(f"  현재 생산량    : {progress.produced_quantity}")
+        print(f"  총 생산 시간   : {job.total_duration}분")
+        print(f"  완료 예정 시각 : {progress.estimated_completion}")
 
     def show_waiting_jobs(self, jobs: list[ProductionJob]) -> None:
         print("\n=== 생산 대기 목록 ===")

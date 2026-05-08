@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from src.production_queue import ProductionJob
+from src.production_service import ProductionProgress
 
 
 class AbstractProductionView(ABC):
     @abstractmethod
-    def show_current_job(self, job: ProductionJob | None) -> None: ...
+    def show_current_job(self, progress: ProductionProgress | None) -> None: ...
 
     @abstractmethod
     def show_waiting_jobs(self, jobs: list[ProductionJob]) -> None: ...
