@@ -43,5 +43,5 @@ JSON 파일 기반 Repository 계층 구현. 각 엔티티(Sample, Order, Invent
 - [x] RED
 - [x] GREEN
 - [x] REVIEW
-- [ ] 승인 완료
-- [ ] git push 완료
+- [x] 승인 완료
+- [x] git push 완료
