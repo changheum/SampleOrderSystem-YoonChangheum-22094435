@@ -86,3 +86,10 @@ class TestMainMenuRun:
         mock_monitoring_ctrl.service = MagicMock()
         menu.run()
         mock_view.show_summary.assert_called_once()
+
+    def test_summary_returns_empty_dict_on_exception(self, menu, mock_view, mock_monitoring_ctrl):
+        mock_monitoring_ctrl._service.get_orders_by_status.side_effect = Exception("db error")
+        mock_view.show_menu.return_value = "6"
+        menu.run()
+        call_args = mock_view.show_summary.call_args[0][0]
+        assert call_args == {}
