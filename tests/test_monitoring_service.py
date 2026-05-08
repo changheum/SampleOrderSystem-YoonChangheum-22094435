@@ -129,3 +129,12 @@ class TestMonitoringServiceInventoryStatus:
         result = service.get_inventory_status()
         assert result[0]["stock_quantity"] == 42
         assert result[0]["sample"].name == "GaN Wafer"
+
+    def test_returns_surplus_when_stock_equals_demand(self, service, mock_sample_repo, mock_order_repo, mock_inventory_repo):
+        mock_sample_repo.find_all.return_value = [
+            Sample(sample_id="S001", name="GaN Wafer", avg_production_time=60, yield_rate=0.9)
+        ]
+        mock_order_repo.find_all.return_value = [make_order("O001", OrderStatus.RESERVED, quantity=10)]
+        mock_inventory_repo.find_by_id.return_value = Inventory(sample_id="S001", stock_quantity=10)
+        result = service.get_inventory_status()
+        assert result[0]["status"] == InventoryStatusLabel.SURPLUS

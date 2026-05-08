@@ -1,5 +1,6 @@
+from enum import Enum
 from src.models import OrderStatus
-from src.repository import OrderRepository, SampleRepository, InventoryRepository
+from src.protocols import ReadableOrderRepository, ReadableSampleRepository, ReadableInventoryRepository
 
 _MONITORED_STATUSES = [
     OrderStatus.RESERVED,
@@ -9,18 +10,26 @@ _MONITORED_STATUSES = [
 ]
 
 
-class InventoryStatusLabel:
-    SURPLUS = "여유"
+class InventoryStatusLabel(str, Enum):
+    SURPLUS  = "여유"
     SHORTAGE = "부족"
     DEPLETED = "고갈"
+
+    @staticmethod
+    def classify(stock: int, demand: int) -> "InventoryStatusLabel":
+        if stock == 0:
+            return InventoryStatusLabel.DEPLETED
+        if stock < demand:
+            return InventoryStatusLabel.SHORTAGE
+        return InventoryStatusLabel.SURPLUS
 
 
 class MonitoringService:
     def __init__(
         self,
-        order_repo: OrderRepository,
-        sample_repo: SampleRepository,
-        inventory_repo: InventoryRepository,
+        order_repo: ReadableOrderRepository,
+        sample_repo: ReadableSampleRepository,
+        inventory_repo: ReadableInventoryRepository,
     ):
         self._order_repo = order_repo
         self._sample_repo = sample_repo
@@ -44,13 +53,5 @@ class MonitoringService:
         return {
             "sample": sample,
             "stock_quantity": stock,
-            "status": self._label(stock, demand),
+            "status": InventoryStatusLabel.classify(stock, demand),
         }
-
-    @staticmethod
-    def _label(stock: int, demand: int) -> str:
-        if stock == 0:
-            return InventoryStatusLabel.DEPLETED
-        if stock < demand:
-            return InventoryStatusLabel.SHORTAGE
-        return InventoryStatusLabel.SURPLUS
