@@ -209,3 +209,37 @@ class TestJsonInventoryRepository:
         repo1.save(inventory)
         repo2 = JsonInventoryRepository(tmp_path_inventory)
         assert repo2.find_by_id("S001").stock_quantity == 100
+
+    def test_save_and_find_inventory_with_zero_stock(self, tmp_path_inventory):
+        repo = JsonInventoryRepository(tmp_path_inventory)
+        repo.save(Inventory(sample_id="S001", stock_quantity=0))
+        result = repo.find_by_id("S001")
+        assert result.stock_quantity == 0
+
+
+# ──────────────────────────────────────────────
+# Corrupted JSON resilience
+# ──────────────────────────────────────────────
+
+class TestJsonResilienceOnCorruptedFile:
+    def test_sample_repo_returns_empty_on_corrupted_file(self, tmp_path):
+        bad_file = str(tmp_path / "bad.json")
+        with open(bad_file, "w") as f:
+            f.write("not valid json {{{")
+        repo = JsonSampleRepository(bad_file)
+        assert repo.find_all() == []
+        assert repo.find_by_id("S001") is None
+
+    def test_order_repo_returns_empty_on_corrupted_file(self, tmp_path):
+        bad_file = str(tmp_path / "bad.json")
+        with open(bad_file, "w") as f:
+            f.write("not valid json {{{")
+        repo = JsonOrderRepository(bad_file)
+        assert repo.find_all() == []
+
+    def test_inventory_repo_returns_empty_on_corrupted_file(self, tmp_path):
+        bad_file = str(tmp_path / "bad.json")
+        with open(bad_file, "w") as f:
+            f.write("not valid json {{{")
+        repo = JsonInventoryRepository(bad_file)
+        assert repo.find_all() == []
