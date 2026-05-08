@@ -1,5 +1,6 @@
 import uuid
 from src.models import Order, Inventory, OrderStatus
+from src.protocols import ProductionQueueProtocol
 from src.repository import OrderRepository, SampleRepository, InventoryRepository
 
 
@@ -9,7 +10,7 @@ class OrderService:
         order_repo: OrderRepository,
         sample_repo: SampleRepository,
         inventory_repo: InventoryRepository,
-        production_queue,
+        production_queue: ProductionQueueProtocol,
     ):
         self._order_repo = order_repo
         self._sample_repo = sample_repo
@@ -19,6 +20,8 @@ class OrderService:
     def place_order(self, sample_id: str, customer_name: str, quantity: int) -> Order:
         if self._sample_repo.find_by_id(sample_id) is None:
             raise ValueError(f"Sample '{sample_id}' not found")
+        if quantity <= 0:
+            raise ValueError("Quantity must be a positive integer")
         order = Order(
             order_id=str(uuid.uuid4()),
             sample_id=sample_id,
@@ -36,8 +39,8 @@ class OrderService:
         stock = inventory.stock_quantity if inventory else 0
 
         if stock >= order.quantity:
-            return self._confirm_with_stock(order, inventory, stock)
-        return self._send_to_production(order, sample, stock)
+            return self._confirm_with_stock(order, stock)
+        return self._send_to_production(order, sample)
 
     def reject(self, order_id: str) -> Order:
         order = self._get_reserved_order(order_id)
@@ -62,7 +65,7 @@ class OrderService:
             raise ValueError(f"Order must be in RESERVED status (current: {order.status})")
         return order
 
-    def _confirm_with_stock(self, order: Order, inventory: Inventory, stock: int) -> Order:
+    def _confirm_with_stock(self, order: Order, stock: int) -> Order:
         updated_inventory = Inventory(sample_id=order.sample_id, stock_quantity=stock - order.quantity)
         self._inventory_repo.save(updated_inventory)
         confirmed = Order(
@@ -75,7 +78,7 @@ class OrderService:
         self._order_repo.save(confirmed)
         return confirmed
 
-    def _send_to_production(self, order: Order, sample, stock: int) -> Order:
+    def _send_to_production(self, order: Order, sample) -> Order:
         producing = Order(
             order_id=order.order_id,
             sample_id=order.sample_id,

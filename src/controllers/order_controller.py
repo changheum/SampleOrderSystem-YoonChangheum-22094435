@@ -33,6 +33,8 @@ class OrderController:
             elif choice == "2":
                 order = self._service.reject(order_id)
                 self._view.show_reject_success(order.order_id)
+            else:
+                self._view.show_error("승인(1) 또는 거절(2)을 선택하세요.")
         except ValueError as e:
             self._view.show_error(str(e))
 

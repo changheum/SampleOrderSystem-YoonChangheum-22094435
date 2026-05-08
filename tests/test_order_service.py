@@ -75,12 +75,12 @@ class TestOrderServicePlaceOrder:
 
     def test_place_order_raises_when_quantity_is_zero(self, service, mock_sample_repo, sample):
         mock_sample_repo.find_by_id.return_value = sample
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Quantity"):
             service.place_order("S001", "KAIST Lab", 0)
 
     def test_place_order_raises_when_quantity_is_negative(self, service, mock_sample_repo, sample):
         mock_sample_repo.find_by_id.return_value = sample
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Quantity"):
             service.place_order("S001", "KAIST Lab", -1)
 
 

@@ -74,13 +74,14 @@ class TestOrderControllerApproveReject:
         controller.approve_or_reject()
         mock_view.show_error.assert_called_once()
 
-    def test_approve_or_reject_ignores_invalid_choice(self, controller, mock_service, mock_view, reserved_order):
+    def test_approve_or_reject_shows_error_on_invalid_choice(self, controller, mock_service, mock_view, reserved_order):
         mock_service.find_reserved.return_value = [reserved_order]
         mock_view.show_reserved_list_and_select.return_value = "O001"
         mock_view.show_approve_or_reject_prompt.return_value = "9"
         controller.approve_or_reject()
         mock_service.approve.assert_not_called()
         mock_service.reject.assert_not_called()
+        mock_view.show_error.assert_called_once()
 
 
 class TestOrderControllerRun:
