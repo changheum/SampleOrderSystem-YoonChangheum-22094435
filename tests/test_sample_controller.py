@@ -30,7 +30,9 @@ class TestSampleControllerRegister:
         inputs = iter(["S001", "GaN Wafer", "120", "0.9"])
         with patch("builtins.input", side_effect=inputs):
             controller.register()
-        mock_service.register.assert_called_once_with("S001", "GaN Wafer", 120, 0.9)
+        mock_service.register.assert_called_once_with(
+            sample_id="S001", name="GaN Wafer", avg_production_time=120, yield_rate=0.9
+        )
 
     def test_register_prints_success_message(self, controller, mock_service, capsys):
         mock_service.register.return_value = Sample(
@@ -88,3 +90,30 @@ class TestSampleControllerSearch:
             controller.search()
         captured = capsys.readouterr()
         assert len(captured.out) > 0
+
+
+class TestSampleControllerRun:
+    def test_run_register_then_exit(self, controller, mock_service, capsys):
+        mock_service.register.return_value = Sample(
+            sample_id="S001", name="GaN Wafer", avg_production_time=120, yield_rate=0.9
+        )
+        menu_then_exit = iter(["1", "4"])
+        field_inputs = iter(["S001", "GaN Wafer", "120", "0.9"])
+        def fake_input(prompt=""):
+            if "선택" in prompt:
+                return next(menu_then_exit)
+            return next(field_inputs)
+        with patch("builtins.input", side_effect=fake_input):
+            controller.run()
+
+    def test_run_list_then_exit(self, controller, mock_service, capsys):
+        mock_service.find_all.return_value = []
+        inputs = iter(["2", "4"])
+        with patch("builtins.input", side_effect=inputs):
+            controller.run()
+
+    def test_run_search_then_exit(self, controller, mock_service, capsys):
+        mock_service.search_by_name.return_value = []
+        inputs = iter(["3", "Silicon", "4"])
+        with patch("builtins.input", side_effect=inputs):
+            controller.run()
