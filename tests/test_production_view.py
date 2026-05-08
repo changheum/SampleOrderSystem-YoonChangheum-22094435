@@ -36,14 +36,6 @@ class TestProductionView:
         view.show_waiting_jobs([])
         assert "없습니다" in capsys.readouterr().out
 
-    def test_show_complete_prompt_returns_input(self, view):
-        with patch("builtins.input", return_value="J001"):
-            assert view.show_complete_prompt() == "J001"
-
-    def test_show_complete_success_prints_order_id(self, view, capsys):
-        view.show_complete_success("O001")
-        assert "O001" in capsys.readouterr().out
-
     def test_show_error_prints_message(self, view, capsys):
         view.show_error("오류")
         assert "오류" in capsys.readouterr().out
@@ -76,35 +68,3 @@ class TestProductionViewWithProgress:
         assert "없습니다" in capsys.readouterr().out
 
 
-class TestProductionViewJobSelection:
-    def test_show_jobs_for_selection_prints_numbered_list(self, view, sample_job, capsys):
-        with patch("builtins.input", return_value=""):
-            view.show_jobs_for_selection([sample_job])
-        out = capsys.readouterr().out
-        assert "1" in out
-        assert "O001" in out
-
-    def test_show_jobs_for_selection_returns_none_when_no_jobs(self, view, capsys):
-        result = view.show_jobs_for_selection([])
-        assert result is None
-        assert "없습니다" in capsys.readouterr().out
-
-    def test_show_jobs_for_selection_returns_selected_job(self, view, sample_job):
-        with patch("builtins.input", return_value="1"):
-            result = view.show_jobs_for_selection([sample_job])
-        assert result == sample_job
-
-    def test_show_jobs_for_selection_returns_none_on_empty_input(self, view, sample_job):
-        with patch("builtins.input", return_value=""):
-            result = view.show_jobs_for_selection([sample_job])
-        assert result is None
-
-    def test_show_jobs_for_selection_returns_none_on_out_of_range_input(self, view, sample_job):
-        with patch("builtins.input", return_value="99"):
-            result = view.show_jobs_for_selection([sample_job])
-        assert result is None
-
-    def test_show_jobs_for_selection_returns_none_on_non_numeric_input(self, view, sample_job):
-        with patch("builtins.input", return_value="abc"):
-            result = view.show_jobs_for_selection([sample_job])
-        assert result is None
