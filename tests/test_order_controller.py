@@ -47,7 +47,10 @@ class TestOrderControllerPlaceOrder:
             order_id="O001", sample_id="S001", customer_name="Lab", quantity=10, status=OrderStatus.RESERVED
         )
         controller.place_order()
-        mock_view.show_sample_list_for_order.assert_called_once_with(sample_entries)
+        calls = [c[0] for c in mock_view.method_calls]
+        assert "show_sample_list_for_order" in calls
+        assert "show_place_order_prompt" in calls
+        assert calls.index("show_sample_list_for_order") < calls.index("show_place_order_prompt")
 
     def test_place_order_calls_service_with_user_input(self, controller, mock_service, mock_sample_service, mock_view, sample_entries):
         mock_sample_service.find_all.return_value = sample_entries

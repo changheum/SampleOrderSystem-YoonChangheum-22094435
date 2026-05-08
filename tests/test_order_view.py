@@ -34,6 +34,8 @@ class TestOrderView:
         assert "GaN Wafer" in out
         assert "S001" in out
         assert "50" in out
+        assert "생산시간" in out
+        assert "수율" in out
 
     def test_show_place_order_prompt_returns_input_dict(self, view):
         with patch("builtins.input", side_effect=["S001", "KAIST Lab", "10"]):
