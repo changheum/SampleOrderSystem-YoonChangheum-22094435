@@ -1,13 +1,20 @@
 from src.order_service import OrderService
+from src.sample_service import SampleService
 from src.views.order_view import OrderView
 
 
 class OrderController:
-    def __init__(self, service: OrderService, view: OrderView = None):
+    def __init__(self, service: OrderService, sample_service: SampleService, view: OrderView = None):
         self._service = service
+        self._sample_service = sample_service
         self._view = view or OrderView()
 
     def place_order(self) -> None:
+        entries = self._sample_service.find_all()
+        if not entries:
+            self._view.show_error("등록된 시료가 없습니다. 먼저 시료를 등록해 주세요.")
+            return
+        self._view.show_sample_list_for_order(entries)
         prompt = self._view.show_place_order_prompt()
         try:
             order = self._service.place_order(

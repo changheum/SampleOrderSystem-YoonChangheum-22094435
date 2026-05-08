@@ -1,12 +1,22 @@
 import pytest
 from unittest.mock import patch
-from src.models import Order, OrderStatus
+from src.models import Order, Sample, OrderStatus
 from src.views.order_view import OrderView
 
 
 @pytest.fixture
 def view():
     return OrderView()
+
+
+@pytest.fixture
+def sample_entries():
+    return [
+        {
+            "sample": Sample(sample_id="S001", name="GaN Wafer", avg_production_time=60, yield_rate=0.9),
+            "stock_quantity": 50,
+        }
+    ]
 
 
 @pytest.fixture
@@ -18,6 +28,13 @@ def reserved_orders():
 
 
 class TestOrderView:
+    def test_show_sample_list_for_order_prints_sample_info(self, view, sample_entries, capsys):
+        view.show_sample_list_for_order(sample_entries)
+        out = capsys.readouterr().out
+        assert "GaN Wafer" in out
+        assert "S001" in out
+        assert "50" in out
+
     def test_show_place_order_prompt_returns_input_dict(self, view):
         with patch("builtins.input", side_effect=["S001", "KAIST Lab", "10"]):
             result = view.show_place_order_prompt()

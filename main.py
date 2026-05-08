@@ -31,7 +31,7 @@ def main():
 
     menu = MainMenu(
         sample_ctrl     = SampleController(sample_svc),
-        order_ctrl      = OrderController(order_svc),
+        order_ctrl      = OrderController(order_svc, sample_svc),
         monitoring_ctrl = MonitoringController(monitoring_svc),
         production_ctrl = ProductionController(production_svc),
         release_ctrl    = ReleaseController(release_svc),
