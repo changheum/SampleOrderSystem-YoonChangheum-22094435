@@ -69,6 +69,51 @@ class TestProductionControllerCompleteJob:
         mock_service.complete_job.assert_not_called()
 
 
+class TestProductionControllerCompleteJobWithList:
+    def test_complete_job_shows_job_list_with_current_and_waiting(self, controller, mock_service, mock_view, sample_job):
+        waiting = ProductionJob(job_id="J002", order_id="O002", sample_id="S001", target_quantity=5, total_duration=300)
+        mock_service.get_current_job.return_value = sample_job
+        mock_service.get_waiting_jobs.return_value = [waiting]
+        mock_view.show_jobs_for_selection.return_value = None
+        controller.complete_job()
+        mock_view.show_jobs_for_selection.assert_called_once_with([sample_job, waiting])
+
+    def test_complete_job_calls_service_with_selected_job_id(self, controller, mock_service, mock_view, sample_job):
+        mock_service.get_current_job.return_value = sample_job
+        mock_service.get_waiting_jobs.return_value = []
+        mock_view.show_jobs_for_selection.return_value = sample_job
+        mock_service.complete_job.return_value = Order(
+            order_id="O001", sample_id="S001", customer_name="Lab", quantity=10, status=OrderStatus.CONFIRMED
+        )
+        controller.complete_job()
+        mock_service.complete_job.assert_called_once_with("J001")
+
+    def test_complete_job_shows_success_after_list_selection(self, controller, mock_service, mock_view, sample_job):
+        mock_service.get_current_job.return_value = sample_job
+        mock_service.get_waiting_jobs.return_value = []
+        mock_view.show_jobs_for_selection.return_value = sample_job
+        mock_service.complete_job.return_value = Order(
+            order_id="O001", sample_id="S001", customer_name="Lab", quantity=10, status=OrderStatus.CONFIRMED
+        )
+        controller.complete_job()
+        mock_view.show_complete_success.assert_called_once_with("O001")
+
+    def test_complete_job_skips_when_no_selection(self, controller, mock_service, mock_view, sample_job):
+        mock_service.get_current_job.return_value = sample_job
+        mock_service.get_waiting_jobs.return_value = []
+        mock_view.show_jobs_for_selection.return_value = None
+        controller.complete_job()
+        mock_service.complete_job.assert_not_called()
+
+    def test_complete_job_shows_error_on_service_failure(self, controller, mock_service, mock_view, sample_job):
+        mock_service.get_current_job.return_value = sample_job
+        mock_service.get_waiting_jobs.return_value = []
+        mock_view.show_jobs_for_selection.return_value = sample_job
+        mock_service.complete_job.side_effect = ValueError("Job not found")
+        controller.complete_job()
+        mock_view.show_error.assert_called_once()
+
+
 class TestProductionControllerRun:
     def test_run_show_status_then_exit(self, controller, mock_service, mock_view, sample_job):
         mock_view.show_menu.side_effect = ["1", "3"]
