@@ -53,5 +53,5 @@ FIFO 생산 큐 구현, 생산량/생산시간 계산, 생산 완료 시 PRODUCI
 - [x] RED
 - [x] GREEN
 - [x] REVIEW
-- [ ] 승인 완료
-- [ ] git push 완료
+- [x] 승인 완료
+- [x] git push 완료
