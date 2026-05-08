@@ -139,15 +139,19 @@ class TestOrderServiceApproveWithInsufficientStock:
         result = service.approve("O001")
         assert result.status == OrderStatus.PRODUCING
 
-    def test_approve_enqueues_production_when_stock_insufficient(
+    def test_approve_enqueues_production_with_actual_shortage(
         self, service, mock_order_repo, mock_sample_repo, mock_inventory_repo, mock_production_queue,
         reserved_order, sample, inventory_insufficient
     ):
+        # stock=5, order.quantity=10 → shortage should be 5, not 10
         mock_order_repo.find_by_id.return_value = reserved_order
         mock_sample_repo.find_by_id.return_value = sample
         mock_inventory_repo.find_by_id.return_value = inventory_insufficient
         service.approve("O001")
-        mock_production_queue.enqueue.assert_called_once()
+        call_kwargs = mock_production_queue.enqueue.call_args
+        assert call_kwargs is not None
+        shortage_arg = call_kwargs.kwargs.get("shortage") or call_kwargs.args[2] if len(call_kwargs.args) > 2 else call_kwargs.kwargs.get("shortage")
+        assert shortage_arg == 5  # order.quantity(10) - stock(5)
 
     def test_approve_sets_producing_when_stock_is_zero(
         self, service, mock_order_repo, mock_sample_repo, mock_inventory_repo, mock_production_queue,

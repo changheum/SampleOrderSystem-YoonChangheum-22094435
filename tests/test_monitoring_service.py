@@ -130,6 +130,26 @@ class TestMonitoringServiceInventoryStatus:
         assert result[0]["stock_quantity"] == 42
         assert result[0]["sample"].name == "GaN Wafer"
 
+class TestMonitoringServiceGetSummary:
+    def test_get_summary_returns_counts(self, service, mock_order_repo, mock_sample_repo, mock_inventory_repo):
+        mock_sample_repo.find_all.return_value = [
+            Sample(sample_id="S001", name="GaN Wafer", avg_production_time=60, yield_rate=0.9),
+            Sample(sample_id="S002", name="SiC Chip", avg_production_time=60, yield_rate=0.8),
+        ]
+        mock_order_repo.find_all.return_value = [
+            make_order("O001", OrderStatus.RESERVED),
+            make_order("O002", OrderStatus.CONFIRMED),
+            make_order("O003", OrderStatus.REJECTED),
+        ]
+        summary = service.get_summary()
+        assert summary["sample_count"] == 2
+        assert summary["reserved"] == 1
+        assert summary["confirmed"] == 1
+        assert summary["producing"] == 0
+        assert summary["released"] == 0
+
+
+class TestMonitoringServiceInventoryStatusBoundary:
     def test_returns_surplus_when_stock_equals_demand(self, service, mock_sample_repo, mock_order_repo, mock_inventory_repo):
         mock_sample_repo.find_all.return_value = [
             Sample(sample_id="S001", name="GaN Wafer", avg_production_time=60, yield_rate=0.9)

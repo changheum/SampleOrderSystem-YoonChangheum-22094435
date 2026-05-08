@@ -40,7 +40,7 @@ class OrderService:
 
         if stock >= order.quantity:
             return self._confirm_with_stock(order, stock)
-        return self._send_to_production(order, sample)
+        return self._send_to_production(order, sample, stock)
 
     def reject(self, order_id: str) -> Order:
         order = self._get_reserved_order(order_id)
@@ -78,7 +78,7 @@ class OrderService:
         self._order_repo.save(confirmed)
         return confirmed
 
-    def _send_to_production(self, order: Order, sample) -> Order:
+    def _send_to_production(self, order: Order, sample, stock: int) -> Order:
         producing = Order(
             order_id=order.order_id,
             sample_id=order.sample_id,
@@ -87,5 +87,6 @@ class OrderService:
             status=OrderStatus.PRODUCING,
         )
         self._order_repo.save(producing)
-        self._production_queue.enqueue(producing, sample)
+        shortage = order.quantity - stock
+        self._production_queue.enqueue(producing, sample, shortage=shortage)
         return producing

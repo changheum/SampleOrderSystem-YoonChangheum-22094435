@@ -46,15 +46,6 @@ class MainMenu:
 
     def _build_summary(self) -> dict:
         try:
-            orders_by_status = self._monitoring_ctrl._service.get_orders_by_status()
-            sample_count = len(self._monitoring_ctrl._service._sample_repo.find_all())
-            from src.models import OrderStatus
-            return {
-                "sample_count": sample_count,
-                "reserved": len(orders_by_status.get(OrderStatus.RESERVED, [])),
-                "producing": len(orders_by_status.get(OrderStatus.PRODUCING, [])),
-                "confirmed": len(orders_by_status.get(OrderStatus.CONFIRMED, [])),
-                "released": len(orders_by_status.get(OrderStatus.RELEASE, [])),
-            }
+            return self._monitoring_ctrl._service.get_summary()
         except Exception:
             return {}

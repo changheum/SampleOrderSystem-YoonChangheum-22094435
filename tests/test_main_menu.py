@@ -82,13 +82,17 @@ class TestMainMenuRun:
         mock_view.show_error.assert_called_once()
 
     def test_summary_is_shown_each_iteration(self, menu, mock_view, mock_monitoring_ctrl):
-        mock_view.show_menu.side_effect = ["6"]
-        mock_monitoring_ctrl.service = MagicMock()
+        mock_monitoring_ctrl._service.get_summary.return_value = {
+            "sample_count": 2, "reserved": 1, "producing": 0, "confirmed": 0, "released": 3
+        }
+        mock_view.show_menu.return_value = "6"
         menu.run()
         mock_view.show_summary.assert_called_once()
+        call_args = mock_view.show_summary.call_args[0][0]
+        assert call_args["sample_count"] == 2
 
     def test_summary_returns_empty_dict_on_exception(self, menu, mock_view, mock_monitoring_ctrl):
-        mock_monitoring_ctrl._service.get_orders_by_status.side_effect = Exception("db error")
+        mock_monitoring_ctrl._service.get_summary.side_effect = Exception("db error")
         mock_view.show_menu.return_value = "6"
         menu.run()
         call_args = mock_view.show_summary.call_args[0][0]

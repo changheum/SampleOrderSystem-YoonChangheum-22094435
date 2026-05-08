@@ -18,7 +18,7 @@ class ProductionJob:
 
 class AbstractProductionQueue(ABC):
     @abstractmethod
-    def enqueue(self, order: Order, sample: Sample) -> ProductionJob: ...
+    def enqueue(self, order: Order, sample: Sample, shortage: int = None) -> ProductionJob: ...
 
     @abstractmethod
     def get_current_job(self) -> ProductionJob | None: ...
@@ -38,8 +38,9 @@ class ProductionQueue(AbstractProductionQueue):
         self._queue: deque[ProductionJob] = deque()
         self._calculator = calculator or ProductionCalculator()
 
-    def enqueue(self, order: Order, sample: Sample) -> ProductionJob:
-        target_qty = self._calculator.calculate_quantity(order.quantity, sample.yield_rate)
+    def enqueue(self, order: Order, sample: Sample, shortage: int = None) -> ProductionJob:
+        actual_shortage = shortage if shortage is not None else order.quantity
+        target_qty = self._calculator.calculate_quantity(actual_shortage, sample.yield_rate)
         duration = self._calculator.calculate_duration(sample.avg_production_time, target_qty)
         job = ProductionJob(
             job_id=str(uuid.uuid4()),

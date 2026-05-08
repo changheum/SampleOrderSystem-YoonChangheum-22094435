@@ -28,7 +28,7 @@ class ProductionService:
         order = self._order_repo.find_by_id(job.order_id)
         if order is None:
             raise ValueError(f"Order '{job.order_id}' not found")
-        self._update_inventory(job)
+        self._update_inventory(job, order.quantity)
         confirmed = Order(
             order_id=order.order_id,
             sample_id=order.sample_id,
@@ -39,8 +39,9 @@ class ProductionService:
         self._order_repo.save(confirmed)
         return confirmed
 
-    def _update_inventory(self, job: ProductionJob) -> None:
+    def _update_inventory(self, job: ProductionJob, order_quantity: int) -> None:
         existing = self._inventory_repo.find_by_id(job.sample_id)
         current_stock = existing.stock_quantity if existing else 0
-        updated = Inventory(sample_id=job.sample_id, stock_quantity=current_stock + job.target_quantity)
+        net_stock = current_stock + job.target_quantity - order_quantity
+        updated = Inventory(sample_id=job.sample_id, stock_quantity=max(0, net_stock))
         self._inventory_repo.save(updated)

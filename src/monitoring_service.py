@@ -42,6 +42,17 @@ class MonitoringService:
                 result[order.status].append(order)
         return result
 
+    def get_summary(self) -> dict:
+        orders_by_status = self.get_orders_by_status()
+        sample_count = len(self._sample_repo.find_all())
+        return {
+            "sample_count": sample_count,
+            "reserved": len(orders_by_status.get(OrderStatus.RESERVED, [])),
+            "producing": len(orders_by_status.get(OrderStatus.PRODUCING, [])),
+            "confirmed": len(orders_by_status.get(OrderStatus.CONFIRMED, [])),
+            "released": len(orders_by_status.get(OrderStatus.RELEASE, [])),
+        }
+
     def get_inventory_status(self) -> list[dict]:
         orders = [o for o in self._order_repo.find_all() if o.status != OrderStatus.REJECTED]
         return [self._build_status(sample, orders) for sample in self._sample_repo.find_all()]

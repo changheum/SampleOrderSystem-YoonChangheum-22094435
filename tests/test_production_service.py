@@ -115,15 +115,16 @@ class TestProductionService:
         result = service.complete_job(job.job_id)
         assert result.status == OrderStatus.CONFIRMED
 
-    def test_complete_job_updates_inventory(self, service, mock_order_repo, mock_inventory_repo, producing_order, sample, queue):
+    def test_complete_job_updates_inventory_with_net_stock(self, service, mock_order_repo, mock_inventory_repo, producing_order, sample, queue):
         service.enqueue(producing_order, sample)
         job = service.get_current_job()
         mock_order_repo.find_by_id.return_value = producing_order
         mock_inventory_repo.find_by_id.return_value = Inventory(sample_id="S001", stock_quantity=5)
         service.complete_job(job.job_id)
         saved = mock_inventory_repo.save.call_args[0][0]
-        # existing 5 + produced target_quantity(13) = 18
-        assert saved.stock_quantity == 5 + job.target_quantity
+        # existing 5 + produced target_quantity - order.quantity(10)
+        expected = 5 + job.target_quantity - producing_order.quantity
+        assert saved.stock_quantity == expected
 
     def test_complete_job_raises_when_order_not_found(self, service, mock_order_repo, producing_order, sample, queue):
         service.enqueue(producing_order, sample)
