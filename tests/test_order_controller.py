@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from src.models import Order, OrderStatus
+from src.models import Order, Sample, Inventory, OrderStatus
 from src.controllers.order_controller import OrderController
 
 
@@ -10,13 +10,28 @@ def mock_service():
 
 
 @pytest.fixture
+def mock_sample_service():
+    return MagicMock()
+
+
+@pytest.fixture
 def mock_view():
     return MagicMock()
 
 
 @pytest.fixture
-def controller(mock_service, mock_view):
-    return OrderController(mock_service, mock_view)
+def controller(mock_service, mock_sample_service, mock_view):
+    return OrderController(mock_service, mock_sample_service, mock_view)
+
+
+@pytest.fixture
+def sample_entries():
+    return [
+        {
+            "sample": Sample(sample_id="S001", name="GaN Wafer", avg_production_time=60, yield_rate=0.9),
+            "stock_quantity": 50,
+        }
+    ]
 
 
 @pytest.fixture
@@ -25,7 +40,17 @@ def reserved_order():
 
 
 class TestOrderControllerPlaceOrder:
-    def test_place_order_calls_service_with_user_input(self, controller, mock_service, mock_view):
+    def test_place_order_shows_sample_list_before_prompt(self, controller, mock_service, mock_sample_service, mock_view, sample_entries):
+        mock_sample_service.find_all.return_value = sample_entries
+        mock_view.show_place_order_prompt.return_value = {"sample_id": "S001", "customer_name": "Lab", "quantity": "10"}
+        mock_service.place_order.return_value = Order(
+            order_id="O001", sample_id="S001", customer_name="Lab", quantity=10, status=OrderStatus.RESERVED
+        )
+        controller.place_order()
+        mock_view.show_sample_list_for_order.assert_called_once_with(sample_entries)
+
+    def test_place_order_calls_service_with_user_input(self, controller, mock_service, mock_sample_service, mock_view, sample_entries):
+        mock_sample_service.find_all.return_value = sample_entries
         mock_view.show_place_order_prompt.return_value = {"sample_id": "S001", "customer_name": "Lab", "quantity": "10"}
         mock_service.place_order.return_value = Order(
             order_id="O001", sample_id="S001", customer_name="Lab", quantity=10, status=OrderStatus.RESERVED
@@ -33,11 +58,18 @@ class TestOrderControllerPlaceOrder:
         controller.place_order()
         mock_service.place_order.assert_called_once_with("S001", "Lab", 10)
 
-    def test_place_order_shows_error_on_value_error(self, controller, mock_service, mock_view):
+    def test_place_order_shows_error_on_value_error(self, controller, mock_service, mock_sample_service, mock_view, sample_entries):
+        mock_sample_service.find_all.return_value = sample_entries
         mock_view.show_place_order_prompt.return_value = {"sample_id": "NONE", "customer_name": "Lab", "quantity": "10"}
         mock_service.place_order.side_effect = ValueError("Sample not found")
         controller.place_order()
         mock_view.show_error.assert_called_once()
+
+    def test_place_order_shows_error_when_no_samples_registered(self, controller, mock_service, mock_sample_service, mock_view):
+        mock_sample_service.find_all.return_value = []
+        controller.place_order()
+        mock_view.show_error.assert_called_once()
+        mock_service.place_order.assert_not_called()
 
 
 class TestOrderControllerApproveReject:
@@ -85,8 +117,9 @@ class TestOrderControllerApproveReject:
 
 
 class TestOrderControllerRun:
-    def test_run_place_then_exit(self, controller, mock_service, mock_view):
+    def test_run_place_then_exit(self, controller, mock_service, mock_sample_service, mock_view, sample_entries):
         mock_view.show_menu.side_effect = ["1", "3"]
+        mock_sample_service.find_all.return_value = sample_entries
         mock_view.show_place_order_prompt.return_value = {"sample_id": "S001", "customer_name": "Lab", "quantity": "5"}
         mock_service.place_order.return_value = Order(
             order_id="O001", sample_id="S001", customer_name="Lab", quantity=5, status=OrderStatus.RESERVED
