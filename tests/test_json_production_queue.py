@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import patch
 from datetime import datetime, timedelta
@@ -92,3 +93,27 @@ class TestJsonProductionQueuePersistence:
         queue = JsonProductionQueue(queue_file)
         assert queue.list_all() == []
         assert queue.get_current_job() is None
+
+
+class TestJsonProductionQueueFileSync:
+    """데이터 파일 삭제 시 큐 상태가 즉시 반영되어야 한다 (file-sync)."""
+
+    def test_get_current_job_returns_none_after_file_deleted(self, queue_file, producing_order, sample):
+        queue = JsonProductionQueue(queue_file)
+        queue.enqueue(producing_order, sample)
+        os.remove(queue_file)
+        assert queue.get_current_job() is None
+
+    def test_list_all_returns_empty_after_file_deleted(self, queue_file, producing_order, another_order, sample):
+        queue = JsonProductionQueue(queue_file)
+        queue.enqueue(producing_order, sample)
+        queue.enqueue(another_order, sample)
+        os.remove(queue_file)
+        assert queue.list_all() == []
+
+    def test_get_waiting_jobs_returns_empty_after_file_deleted(self, queue_file, producing_order, another_order, sample):
+        queue = JsonProductionQueue(queue_file)
+        queue.enqueue(producing_order, sample)
+        queue.enqueue(another_order, sample)
+        os.remove(queue_file)
+        assert queue.get_waiting_jobs() == []
