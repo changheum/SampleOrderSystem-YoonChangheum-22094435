@@ -9,7 +9,6 @@ class ProductionController:
         self._view = view or ProductionView()
 
     def show_status(self) -> None:
-        self._service.restore()
         self._view.show_current_job(self._service.get_current_job_progress())
         self._view.show_waiting_jobs(self._service.get_waiting_jobs())
 
@@ -32,6 +31,7 @@ class ProductionController:
         while True:
             choice = self._view.show_menu()
             if choice == "1":
+                self._service.restore()
                 self.show_status()
             elif choice == "2":
                 self.complete_job()
