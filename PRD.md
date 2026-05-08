@@ -117,7 +117,11 @@ b) 주문 거절
 생산 현황 표기
 
 * 현재 생산중인 시료에 대한 정보 표기
-ex) 주문 정보, 현재까지의 생산량 등
+  * 주문 ID, 시료 ID, 목표 생산량, 총 생산 시간
+  * **현재까지 생산된 물량** : 경과 시간 기반 추정값
+    * 공식: `floor(목표 생산량 × 경과 시간 / 총 생산 시간)`, 목표 생산량 초과 불가
+  * **생산 완료 예정 시각** : `started_at + total_duration`을 "YYYY-MM-DD HH:MM" 형식으로 표시
+    * started_at 미기록 시 "미정"으로 표시
 대기 주문 표기
 생산라인의 대기열인 생산 큐를 이용
 생산 작업을 대기하고 있는 목록을 출력
@@ -275,7 +279,8 @@ Order status 허용값: `RESERVED`, `REJECTED`, `PRODUCING`, `CONFIRMED`, `RELEA
 | Phase 6 | 모니터링 (InventoryStatusLabel Enum, ReadableRepository Protocol) | ✅ 완료 |
 | Phase 7 | 출고 처리 (CONFIRMED → RELEASE) | ✅ 완료 |
 | Phase 8 | 메인 메뉴 통합 + main.py | ✅ 완료 |
-| Phase 9 | 생산 큐 영속성 및 재시작 복원 | 🔲 예정 |
+| Phase 9 | 생산 큐 영속성 및 재시작 복원 | ✅ 완료 |
+| Phase 10 | 생산 현황 — 현재 생산량 및 완료 예정 시각 표시 | 🔲 예정 |
 
 ## 누적 테스트 현황
 
