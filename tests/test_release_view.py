@@ -18,17 +18,15 @@ def confirmed_orders():
 
 
 class TestReleaseView:
-    def test_show_confirmed_list_and_select_returns_input(self, view, confirmed_orders):
-        with patch("builtins.input", return_value="O001"):
-            result = view.show_confirmed_list_and_select(confirmed_orders)
-        assert result == "O001"
-
     def test_show_confirmed_list_prints_order_info(self, view, confirmed_orders, capsys):
-        with patch("builtins.input", return_value="O001"):
-            view.show_confirmed_list_and_select(confirmed_orders)
+        view.show_confirmed_list(confirmed_orders)
         out = capsys.readouterr().out
         assert "KAIST Lab" in out
         assert "S001" in out
+
+    def test_select_order_id_returns_input(self, view):
+        with patch("builtins.input", return_value="O001"):
+            assert view.select_order_id() == "O001"
 
     def test_show_release_success_prints_order_id(self, view, capsys):
         view.show_release_success("O001")

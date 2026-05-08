@@ -12,7 +12,8 @@ class ReleaseController:
         if not confirmed:
             self._view.show_error("출고 가능한 주문이 없습니다.")
             return
-        order_id = self._view.show_confirmed_list_and_select(confirmed)
+        self._view.show_confirmed_list(confirmed)
+        order_id = self._view.select_order_id()
         try:
             order = self._service.release(order_id)
             self._view.show_release_success(order.order_id)

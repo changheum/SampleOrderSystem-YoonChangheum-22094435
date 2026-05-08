@@ -1,13 +1,19 @@
 from src.models import Order
 
+_COL_ORDER_ID  = 38
+_COL_SAMPLE_ID = 10
+_COL_CUSTOMER  = 20
+
 
 class ReleaseView:
-    def show_confirmed_list_and_select(self, orders: list[Order]) -> str:
+    def show_confirmed_list(self, orders: list[Order]) -> None:
         print("\n=== 출고 대기 주문 목록 ===")
-        print(f"{'주문 ID':<38} {'시료 ID':<10} {'고객명':<20} {'수량'}")
+        print(f"{'주문 ID':<{_COL_ORDER_ID}} {'시료 ID':<{_COL_SAMPLE_ID}} {'고객명':<{_COL_CUSTOMER}} {'수량'}")
         print("-" * 80)
         for o in orders:
-            print(f"{o.order_id:<38} {o.sample_id:<10} {o.customer_name:<20} {o.quantity}")
+            print(f"{o.order_id:<{_COL_ORDER_ID}} {o.sample_id:<{_COL_SAMPLE_ID}} {o.customer_name:<{_COL_CUSTOMER}} {o.quantity}")
+
+    def select_order_id(self) -> str:
         return input("\n출고할 주문 ID를 입력하세요: ").strip()
 
     def show_release_success(self, order_id: str) -> None:
