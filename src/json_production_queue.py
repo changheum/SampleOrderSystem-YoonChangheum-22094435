@@ -35,20 +35,25 @@ class JsonProductionQueue(AbstractProductionQueue):
             total_duration=duration,
             started_at=datetime.now().isoformat(),
         )
+        self._jobs = self._load_jobs()
         self._jobs.append(job)
         self._save()
         return job
 
     def get_current_job(self) -> ProductionJob | None:
+        self._jobs = self._load_jobs()
         return self._jobs[0] if self._jobs else None
 
     def get_waiting_jobs(self) -> list[ProductionJob]:
+        self._jobs = self._load_jobs()
         return self._jobs[1:]
 
     def list_all(self) -> list[ProductionJob]:
+        self._jobs = self._load_jobs()
         return list(self._jobs)
 
     def complete(self, job_id: str) -> ProductionJob:
+        self._jobs = self._load_jobs()
         if not self._jobs or self._jobs[0].job_id != job_id:
             raise ValueError(f"Job '{job_id}' not found as current job")
         job = self._jobs.pop(0)
