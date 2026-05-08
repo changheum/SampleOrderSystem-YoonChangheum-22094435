@@ -73,6 +73,12 @@ class TestJsonProductionQueueComplete:
         queue.complete(j1.job_id)
         assert queue.get_current_job().order_id == "O002"
 
+    def test_complete_raises_when_wrong_job_id_and_queue_non_empty(self, queue_file, producing_order, sample):
+        queue = JsonProductionQueue(queue_file)
+        queue.enqueue(producing_order, sample)
+        with pytest.raises(ValueError, match="Job"):
+            queue.complete("WRONG_ID")
+
 
 class TestJsonProductionQueuePersistence:
     def test_load_restores_all_jobs(self, queue_file, producing_order, another_order, sample):
