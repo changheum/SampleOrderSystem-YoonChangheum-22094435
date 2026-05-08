@@ -13,16 +13,31 @@ class ProductionProgress:
     estimated_completion: str
 
 
+class ProgressCalculator:
+    def calc_produced(self, job: ProductionJob) -> int:
+        if not job.started_at:
+            return 0
+        elapsed = (datetime.now() - datetime.fromisoformat(job.started_at)).total_seconds() / 60
+        return min(floor(job.target_quantity * elapsed / job.total_duration), job.target_quantity)
+
+    def calc_completion(self, job: ProductionJob) -> str:
+        if not job.started_at:
+            return "미정"
+        return (datetime.fromisoformat(job.started_at) + timedelta(minutes=job.total_duration)).strftime("%Y-%m-%d %H:%M")
+
+
 class ProductionService:
     def __init__(
         self,
         order_repo: OrderRepository,
         inventory_repo: InventoryRepository,
         production_queue: AbstractProductionQueue,
+        progress_calculator: ProgressCalculator = None,
     ):
         self._order_repo = order_repo
         self._inventory_repo = inventory_repo
         self._queue = production_queue
+        self._progress_calc = progress_calculator or ProgressCalculator()
 
     def enqueue(self, order: Order, sample: Sample) -> ProductionJob:
         return self._queue.enqueue(order, sample)
@@ -36,20 +51,9 @@ class ProductionService:
             return None
         return ProductionProgress(
             job=job,
-            produced_quantity=self._calc_produced(job),
-            estimated_completion=self._calc_completion(job),
+            produced_quantity=self._progress_calc.calc_produced(job),
+            estimated_completion=self._progress_calc.calc_completion(job),
         )
-
-    def _calc_produced(self, job: ProductionJob) -> int:
-        if not job.started_at:
-            return 0
-        elapsed = (datetime.now() - datetime.fromisoformat(job.started_at)).total_seconds() / 60
-        return min(floor(job.target_quantity * elapsed / job.total_duration), job.target_quantity)
-
-    def _calc_completion(self, job: ProductionJob) -> str:
-        if not job.started_at:
-            return "미정"
-        return (datetime.fromisoformat(job.started_at) + timedelta(minutes=job.total_duration)).strftime("%Y-%m-%d %H:%M")
 
     def get_waiting_jobs(self) -> list[ProductionJob]:
         return self._queue.get_waiting_jobs()

@@ -30,9 +30,10 @@ def _to_record(job: ProductionJob) -> dict:
 
 
 class JsonProductionQueue(AbstractProductionQueue):
-    def __init__(self, file_path: str, calculator: ProductionCalculator = None):
+    def __init__(self, file_path: str, calculator: ProductionCalculator = None, clock=None):
         self._file_path = file_path
         self._calculator = calculator or ProductionCalculator()
+        self._clock = clock or datetime.now
         self._jobs: list[ProductionJob] = self._load_jobs()
 
     def enqueue(self, order: Order, sample: Sample, shortage: int = None) -> ProductionJob:
@@ -45,7 +46,7 @@ class JsonProductionQueue(AbstractProductionQueue):
             sample_id=order.sample_id,
             target_quantity=target_qty,
             total_duration=duration,
-            started_at=datetime.now().isoformat(),
+            started_at=self._clock().isoformat(),
         )
         self._reload()
         self._jobs.append(job)

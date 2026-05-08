@@ -36,9 +36,10 @@ class AbstractProductionQueue(ABC):
 
 
 class ProductionQueue(AbstractProductionQueue):
-    def __init__(self, calculator: ProductionCalculator = None):
+    def __init__(self, calculator: ProductionCalculator = None, clock=None):
         self._queue: deque[ProductionJob] = deque()
         self._calculator = calculator or ProductionCalculator()
+        self._clock = clock or datetime.now
 
     def enqueue(self, order: Order, sample: Sample, shortage: int = None) -> ProductionJob:
         actual_shortage = shortage if shortage is not None else order.quantity
@@ -50,7 +51,7 @@ class ProductionQueue(AbstractProductionQueue):
             sample_id=order.sample_id,
             target_quantity=target_qty,
             total_duration=duration,
-            started_at=datetime.now().isoformat(),
+            started_at=self._clock().isoformat(),
         )
         self._queue.append(job)
         return job
