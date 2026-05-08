@@ -49,6 +49,21 @@ class TestProductionControllerShowStatusWithProgress:
         controller.show_status()
         mock_view.show_current_job.assert_called_once_with(mock_progress)
 
+    def test_show_status_calls_restore_before_showing(self, controller, mock_service, mock_view):
+        mock_service.restore.return_value = []
+        mock_service.get_current_job_progress.return_value = None
+        mock_service.get_waiting_jobs.return_value = []
+        controller.show_status()
+        mock_service.restore.assert_called_once()
+
+    def test_show_status_restore_called_before_get_progress(self, controller, mock_service, mock_view):
+        call_order = []
+        mock_service.restore.side_effect = lambda: call_order.append("restore") or []
+        mock_service.get_current_job_progress.side_effect = lambda: call_order.append("progress") or None
+        mock_service.get_waiting_jobs.return_value = []
+        controller.show_status()
+        assert call_order == ["restore", "progress"]
+
 
 class TestProductionControllerCompleteJobWithList:
     def test_complete_job_shows_job_list_with_current_and_waiting(self, controller, mock_service, mock_view, sample_job):
