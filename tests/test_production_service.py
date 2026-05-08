@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+from datetime import datetime, timedelta
 from src.models import Order, Sample, Inventory, OrderStatus
-from src.production_service import ProductionService
+from src.production_service import ProductionService, ProductionProgress
 from src.production_queue import ProductionQueue, ProductionJob, AbstractProductionQueue
 
 
@@ -144,6 +145,57 @@ class TestProductionService:
         except ValueError:
             pass
         mock_order_repo.save.assert_not_called()
+
+
+class TestProductionServiceGetProgress:
+    def test_get_current_job_progress_returns_none_when_no_job(self, service):
+        assert service.get_current_job_progress() is None
+
+    def test_get_current_job_progress_returns_produced_quantity(self, service, producing_order, sample, queue):
+        service.enqueue(producing_order, sample)
+        job = service.get_current_job()
+        started = datetime.fromisoformat(job.started_at)
+        with patch("src.production_service.datetime") as mock_dt:
+            mock_dt.now.return_value = started + timedelta(minutes=390)
+            mock_dt.fromisoformat.side_effect = datetime.fromisoformat
+            progress = service.get_current_job_progress()
+        # 390/780 × 13 = 6.5 → floor = 6
+        assert progress.produced_quantity == 6
+
+    def test_get_current_job_progress_caps_at_target_when_overdue(self, service, producing_order, sample, queue):
+        service.enqueue(producing_order, sample)
+        job = service.get_current_job()
+        started = datetime.fromisoformat(job.started_at)
+        with patch("src.production_service.datetime") as mock_dt:
+            mock_dt.now.return_value = started + timedelta(minutes=9999)
+            mock_dt.fromisoformat.side_effect = datetime.fromisoformat
+            progress = service.get_current_job_progress()
+        assert progress.produced_quantity == job.target_quantity
+
+    def test_get_current_job_progress_returns_correct_completion_time(self, service, producing_order, sample, queue):
+        service.enqueue(producing_order, sample)
+        job = service.get_current_job()
+        progress = service.get_current_job_progress()
+        expected = (datetime.fromisoformat(job.started_at) + timedelta(minutes=job.total_duration)).strftime("%Y-%m-%d %H:%M")
+        assert progress.estimated_completion == expected
+
+    def test_get_current_job_progress_returns_zero_and_unknown_when_no_started_at(self, service):
+        mock_queue = MagicMock()
+        mock_queue.get_current_job.return_value = ProductionJob(
+            job_id="J001", order_id="O001", sample_id="S001",
+            target_quantity=10, total_duration=60, started_at="",
+        )
+        svc = ProductionService(MagicMock(), MagicMock(), mock_queue)
+        progress = svc.get_current_job_progress()
+        assert progress.produced_quantity == 0
+        assert progress.estimated_completion == "미정"
+
+    def test_get_current_job_progress_wraps_job(self, service, producing_order, sample, queue):
+        service.enqueue(producing_order, sample)
+        job = service.get_current_job()
+        progress = service.get_current_job_progress()
+        assert isinstance(progress, ProductionProgress)
+        assert progress.job.job_id == job.job_id
 
 
 class TestAbstractProductionQueue:

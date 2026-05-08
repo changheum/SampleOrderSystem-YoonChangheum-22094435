@@ -42,6 +42,21 @@ class TestProductionControllerShowStatus:
 
 
 
+class TestProductionControllerShowStatusWithProgress:
+    def test_show_status_calls_get_current_job_progress(self, controller, mock_service, mock_view):
+        mock_service.get_current_job_progress.return_value = None
+        mock_service.get_waiting_jobs.return_value = []
+        controller.show_status()
+        mock_service.get_current_job_progress.assert_called_once()
+
+    def test_show_status_passes_progress_to_view(self, controller, mock_service, mock_view):
+        mock_progress = MagicMock()
+        mock_service.get_current_job_progress.return_value = mock_progress
+        mock_service.get_waiting_jobs.return_value = []
+        controller.show_status()
+        mock_view.show_current_job.assert_called_once_with(mock_progress)
+
+
 class TestProductionControllerCompleteJobWithList:
     def test_complete_job_shows_job_list_with_current_and_waiting(self, controller, mock_service, mock_view, sample_job):
         waiting = ProductionJob(job_id="J002", order_id="O002", sample_id="S001", target_quantity=5, total_duration=300)
