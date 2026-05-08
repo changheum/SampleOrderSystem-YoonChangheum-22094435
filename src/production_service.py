@@ -1,5 +1,5 @@
 from src.models import Order, Inventory, OrderStatus, Sample
-from src.production_queue import ProductionQueue, ProductionJob
+from src.production_queue import AbstractProductionQueue, ProductionJob
 from src.repository import OrderRepository, InventoryRepository
 
 
@@ -8,7 +8,7 @@ class ProductionService:
         self,
         order_repo: OrderRepository,
         inventory_repo: InventoryRepository,
-        production_queue: ProductionQueue,
+        production_queue: AbstractProductionQueue,
     ):
         self._order_repo = order_repo
         self._inventory_repo = inventory_repo

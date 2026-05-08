@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from src.models import Order, Sample, Inventory, OrderStatus
 from src.production_service import ProductionService
-from src.production_queue import ProductionQueue, ProductionJob
+from src.production_queue import ProductionQueue, ProductionJob, AbstractProductionQueue
 
 
 @pytest.fixture
@@ -131,3 +131,20 @@ class TestProductionService:
         mock_order_repo.find_by_id.return_value = None
         with pytest.raises(ValueError, match="Order"):
             service.complete_job(job.job_id)
+
+    def test_complete_job_does_not_save_order_when_order_not_found(
+        self, service, mock_order_repo, mock_inventory_repo, producing_order, sample, queue
+    ):
+        service.enqueue(producing_order, sample)
+        job = service.get_current_job()
+        mock_order_repo.find_by_id.return_value = None
+        try:
+            service.complete_job(job.job_id)
+        except ValueError:
+            pass
+        mock_order_repo.save.assert_not_called()
+
+
+class TestAbstractProductionQueue:
+    def test_production_queue_satisfies_abstract_interface(self, queue):
+        assert isinstance(queue, AbstractProductionQueue)

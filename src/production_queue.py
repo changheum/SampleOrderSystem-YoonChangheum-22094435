@@ -1,4 +1,5 @@
 import uuid
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from collections import deque
 from src.models import Order, Sample
@@ -15,14 +16,31 @@ class ProductionJob:
     produced_quantity: int = field(default=0)
 
 
-class ProductionQueue:
-    def __init__(self):
+class AbstractProductionQueue(ABC):
+    @abstractmethod
+    def enqueue(self, order: Order, sample: Sample) -> ProductionJob: ...
+
+    @abstractmethod
+    def get_current_job(self) -> ProductionJob | None: ...
+
+    @abstractmethod
+    def get_waiting_jobs(self) -> list[ProductionJob]: ...
+
+    @abstractmethod
+    def list_all(self) -> list[ProductionJob]: ...
+
+    @abstractmethod
+    def complete(self, job_id: str) -> ProductionJob: ...
+
+
+class ProductionQueue(AbstractProductionQueue):
+    def __init__(self, calculator: ProductionCalculator = None):
         self._queue: deque[ProductionJob] = deque()
+        self._calculator = calculator or ProductionCalculator()
 
     def enqueue(self, order: Order, sample: Sample) -> ProductionJob:
-        shortage = order.quantity
-        target_qty = ProductionCalculator.calculate_quantity(shortage, sample.yield_rate)
-        duration = ProductionCalculator.calculate_duration(sample.avg_production_time, target_qty)
+        target_qty = self._calculator.calculate_quantity(order.quantity, sample.yield_rate)
+        duration = self._calculator.calculate_duration(sample.avg_production_time, target_qty)
         job = ProductionJob(
             job_id=str(uuid.uuid4()),
             order_id=order.order_id,
