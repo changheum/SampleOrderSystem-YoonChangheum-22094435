@@ -48,5 +48,5 @@
 - [x] RED
 - [x] GREEN
 - [x] REVIEW
-- [ ] 승인 완료
-- [ ] git push 완료
+- [x] 승인 완료
+- [x] git push 완료
